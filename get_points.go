@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"math"
 	"net/http"
 	"strings"
@@ -12,13 +13,20 @@ import (
 
 func GetPointsByID(c *gin.Context) {
 	id := c.Param("id")
-	points := GetPoints(id)
+	points, err := GetPoints(id)
+	if err != nil {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Receipt Not Found!"})
+		return
+	}
 	c.IndentedJSON(http.StatusOK, points)
 }
 
-func GetPoints(id string) int64 {
+func GetPoints(id string) (int64, error) {
 	var points int64 = 0
-	receipt := receipts[id]
+	receipt, ok := receipts[id]
+	if !ok {
+		return 0, errors.New("id not found")
+	}
 	points += getAlphanumericPoints(receipt.Retailer)
 	points += getRoundPoints(receipt.Total)
 	points += getMultiplePoints(receipt.Total)
@@ -26,7 +34,7 @@ func GetPoints(id string) int64 {
 	points += getItemDescPoints(receipt.Items)
 	points += getDatePoints(receipt.PurchaseDate)
 	points += getTimePoints(receipt.PurchaseTime)
-	return points
+	return points, nil
 }
 
 // One point for every alphanumeric character in the retailer name
