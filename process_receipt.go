@@ -11,6 +11,7 @@ func ProcessReceipt(c *gin.Context) {
 	var newReceipt Receipt
 
 	if err := c.BindJSON(&newReceipt); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Input does not match with definition!"})
 		return
 	}
 	uuid := uuid.New().String()
